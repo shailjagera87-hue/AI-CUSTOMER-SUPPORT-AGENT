@@ -212,6 +212,28 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
+### Run with Docker Compose
+
+Create the local environment file and set `GROQ_API_KEY` in it:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Build and start the API:
+
+```bash
+docker compose up --build -d
+```
+
+The API is available at `http://127.0.0.1:8000`. Build the knowledge-base index once, or after changing its source documents:
+
+```bash
+docker compose run --rm api python -m scripts.ingest_knowledge_base
+```
+
+Compose stores the SQLite database, FAISS index, and downloaded embedding model in named volumes. Stop the service with `docker compose down`; preserve stored data by not adding `--volumes`.
+
 ### 4. Configure environment variables
 
 Create a `.env` file in the project root using `.env.example` as a reference.
@@ -435,6 +457,12 @@ Recommended production safeguards include:
 - Avoid logging sensitive customer information unnecessarily.
 - Monitor model latency, failures, and token usage.
 - Configure production CORS and deployment settings appropriately.
+
+### Accepted Outstanding Risk
+
+As of 2026-10-10, Docker Scout reported one high-severity finding in the `python:3.12-slim` base image scanned for `linux/amd64` (digest prefix `a6e34c598f24`): `zlib` version `1:1.3.dfsg+really1.3.1-1`, CVE-2026-85091. The finding is accepted temporarily and remains outstanding; it is not suppressed or considered remediated.
+
+Scout did not identify a fixed package version in that scan. This is not proof that no upstream mitigation exists. The project maintainer should check current Debian and Python image advisories, rebuild with an appropriate verified update when available, and rerun the vulnerability scan. Reassess this risk at least every 30 days, before each production release, and whenever the base image or relevant advisories change.
 
 ## 🗺️ Roadmap
 

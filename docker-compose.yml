@@ -1,0 +1,23 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      GROQ_API_KEY: ${GROQ_API_KEY:?Set GROQ_API_KEY in the project .env file}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      DATABASE_URL: sqlite:////app/data/db/customer_support.db
+      HF_HOME: /home/app/.cache/huggingface
+    volumes:
+      - ./data/knowledge_base:/app/data/knowledge_base:ro
+      - vector_store:/app/data/vector_store
+      - conversation_db:/app/data/db
+      - model_cache:/home/app/.cache/huggingface
+    restart: unless-stopped
+
+volumes:
+  vector_store:
+  conversation_db:
+  model_cache:

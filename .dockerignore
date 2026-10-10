@@ -1,0 +1,15 @@
+.git
+.venv
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.ruff_cache
+.env
+.env.*
+!.env.example
+data/vector_store/*
+!data/vector_store/.gitkeep
+*.db
+*.sqlite3
