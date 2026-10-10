@@ -219,9 +219,10 @@ Create a `.env` file in the project root using `.env.example` as a reference.
 ```dotenv
 GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL=openai/gpt-oss-120b
+DATABASE_URL=sqlite:///./data/customer_support.db
 ```
 
-The model setting is optional if the application already defines the same default.
+`GROQ_MODEL` and `DATABASE_URL` are optional. The database defaults to a local SQLite file at `data/customer_support.db`. Set `DATABASE_URL` to a SQLAlchemy URL to use another supported database, such as PostgreSQL.
 
 **Security:** Never commit `.env` files or API credentials. Keep secrets out of source code, logs, and API responses.
 
@@ -304,11 +305,21 @@ Accepts a customer message and returns a structured support response.
   "confidence": 1.0,
   "sources": [],
   "needs_human": false,
-  "escalation_reason": null
+  "escalation_reason": null,
+  "conversation_id": "e70e8418-d882-4fd9-9e65-3fedfc7f4274"
 }
 ```
 
-This is an illustrative response based on the sample order data.
+The API creates a conversation for the first message and returns its ID. Include that ID with subsequent messages to append them to the same conversation:
+
+```json
+{
+  "message": "And when should it arrive?",
+  "conversation_id": "e70e8418-d882-4fd9-9e65-3fedfc7f4274"
+}
+```
+
+Retrieve the persisted conversation and its messages with `GET /api/v1/conversations/{conversation_id}`. This endpoint returns stored history; the current agent does not yet automatically include prior turns as model context.
 
 ### Response fields
 
@@ -337,11 +348,11 @@ The project structure also provides modules for conversation management, order q
 |---|---|
 | `/api/v1/health` | Application health |
 | `/api/v1/chat` | Customer messages and AI responses |
-| `/api/v1/conversations` | Conversation and message history |
+| `/api/v1/conversations/{conversation_id}` | Persisted conversation and message history |
 | `/api/v1/orders` | Order information |
 | `/api/v1/escalation` | Escalation requests and support tickets |
 
-The exact methods, routes, and request schemas for these additional endpoints depend on their implementation.
+Order and escalation endpoint modules are not currently registered in the API router.
 
 ## 📚 Retrieval-Augmented Generation (RAG)
 
@@ -390,17 +401,7 @@ Automatically creating support tickets, notifying staff, or transferring a live 
 
 ## 💬 Conversation Management
 
-The project includes a dedicated foundation for conversation and message management.
-
-A conversation-management implementation can support:
-
-- Conversation IDs and session tracking.
-- Storage of customer and assistant messages.
-- Context-aware follow-up questions.
-- Conversation history retrieval.
-- Persistent LangGraph state through checkpointing or a database-backed session store.
-
-Persistent memory across requests should be configured and tested explicitly; it is not guaranteed by the presence of conversation modules alone.
+SQLAlchemy stores each conversation and its user/assistant messages in the configured database. SQLite is used by default; configure `DATABASE_URL` to connect to PostgreSQL or another SQLAlchemy-supported database. Tables are initialized when the application starts. Each assistant message also stores the structured response payload, including intent, confidence, sources, and escalation fields.
 
 ## 🧪 Testing and Code Quality
 

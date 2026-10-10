@@ -8,6 +8,7 @@ class Settings(BaseSettings):
 
     groq_api_key: str
     groq_model: str = "openai/gpt-oss-120b"
+    database_url: str = "sqlite:///./data/customer_support.db"
 
     model_config = SettingsConfigDict(
         env_file=".env",
